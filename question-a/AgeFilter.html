@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Age Filter</title>
+    <link rel="stylesheet" href="/question-a/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>User Age Filter</h1>
+        
+        <div class="form-section">
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" placeholder="Enter first name">
+                    <div class="error-message" id="firstNameError">First name is required</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" placeholder="Enter last name">
+                    <div class="error-message" id="lastNameError">Last name is required</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" name="age" placeholder="Enter age" min="1" max="120">
+                    <div class="error-message" id="ageError">Please enter a valid age</div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Add User</button>
+            </form>
+        </div>
+        
+        <div class="results-section">
+            <h2 class="results-title">Valid Users</h2>
+            <div id="userList" class="user-list">
+                <div class="empty-state">
+                    No users added yet. Start by adding users above!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class UserAgeFilter {
+            constructor() {
+                this.users = [];
+                this.form = document.getElementById('userForm');
+                this.userList = document.getElementById('userList');
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+                
+                ['firstName', 'lastName', 'age'].forEach(fieldName => {
+                    const field = document.getElementById(fieldName);
+                    field.addEventListener('blur', () => this.validateField(fieldName));
+                    field.addEventListener('input', () => this.clearFieldError(fieldName));
+                });
+            }
+
+            validateField(fieldName) {
+                const field = document.getElementById(fieldName);
+                const errorEl = document.getElementById(fieldName + 'Error');
+                let isValid = true;
+
+                field.classList.remove('error');
+                errorEl.style.display = 'none';
+
+                if (fieldName === 'age') {
+                    const age = parseInt(field.value);
+                    if (!field.value || isNaN(age) || age < 1 || age > 120) {
+                        isValid = false;
+                        errorEl.textContent = 'Please enter a valid age (1-120)';
+                    }
+                } else {
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        errorEl.textContent = `${fieldName === 'firstName' ? 'First' : 'Last'} name is required`;
+                    }
+                }
+
+                if (!isValid) {
+                    field.classList.add('error');
+                    errorEl.style.display = 'block';
+                }
+
+                return isValid;
+            }
+
+            clearFieldError(fieldName) {
+                const field = document.getElementById(fieldName);
+                const errorEl = document.getElementById(fieldName + 'Error');
+                
+                if (field.classList.contains('error') && field.value.trim()) {
+                    field.classList.remove('error');
+                    errorEl.style.display = 'none';
+                }
+            }
+
+            validateForm() {
+                const firstName = this.validateField('firstName');
+                const lastName = this.validateField('lastName');
+                const age = this.validateField('age');
+                
+                return firstName && lastName && age;
+            }
+
+            handleSubmit(e) {
+                e.preventDefault();
+                
+                if (!this.validateForm()) {
+                    this.showNotification('Please fix the errors before submitting', 'warning');
+                    return;
+                }
+
+                const formData = new FormData(this.form);
+                const userData = {
+                    firstName: formData.get('firstName').trim(),
+                    lastName: formData.get('lastName').trim(),
+                    age: parseInt(formData.get('age'))
+                };
+
+                this.processUser(userData);
+                this.form.reset();
+            }
+
+            processUser(userData) {
+                const { firstName, lastName, age } = userData;
+
+                // Filter out users under 18
+                if (age < 18) {
+                    this.showNotification(`${firstName} ${lastName} (age ${age}) is under 18 and was not added`, 'warning');
+                    return;
+                }
+
+                // Transform valid user
+                const transformedUser = {
+                    fullName: `${firstName} ${lastName}`,
+                    ageGroup: age < 30 ? 'Below 30' : 'Above 30'
+                };
+
+                this.users.push(transformedUser);
+                this.renderUsers();
+                this.showNotification(`${transformedUser.fullName} added successfully!`, 'success');
+            }
+
+            renderUsers() {
+                if (this.users.length === 0) {
+                    this.userList.innerHTML = `
+                        <div class="empty-state">
+                            No users added yet. Start by adding users above!
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.userList.innerHTML = this.users.map(user => `
+                    <div class="user-card">
+                        <div class="user-name">${user.fullName}</div>
+                        <div class="age-group ${user.ageGroup.toLowerCase().replace(' ', '-')}">${user.ageGroup}</div>
+                    </div>
+                `).join('');
+            }
+
+            showNotification(message, type) {
+                // Remove existing notification
+                const existing = document.querySelector('.notification');
+                if (existing) {
+                    existing.remove();
+                }
+
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                // Trigger animation
+                setTimeout(() => notification.classList.add('show'), 100);
+
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new UserAgeFilter();
+        });
+    </script>
+</body>
+</html>

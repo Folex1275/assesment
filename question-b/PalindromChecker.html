@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palindrome Checker</title>
+    <link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+
+    <div class="container">
+        <h1>Palindrome Checker</h1>
+        
+        <div class="input-group">
+            <label for="sentence">Enter a sentence:</label>
+            <input type="text" id="sentence" placeholder="A man, a plan, a canal: Panama!" autocomplete="off">
+        </div>
+
+        <div class="cleaned-text">
+            <div>
+                <div class="cleaned-label">Cleaned text:</div>
+                <div class="cleaned-content" id="cleanedText">Enter text above to see cleaned version...</div>
+            </div>
+        </div>
+
+        <div class="result neutral" id="result">
+            Enter some text to check if it's a palindrome
+        </div>
+
+
+    </div>
+
+    <script>
+        const sentenceInput = document.getElementById('sentence');
+        const cleanedTextDiv = document.getElementById('cleanedText');
+        const resultDiv = document.getElementById('result');
+
+        function cleanSentence(sentence) {
+            // Remove spaces, punctuation, and convert to lowercase
+            return sentence.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        }
+
+        function isPalindrome(cleanedText) {
+            return cleanedText === cleanedText.split('').reverse().join('');
+        }
+
+        function checkPalindrome() {
+            const originalText = sentenceInput.value.trim();
+            
+            // Clear result if input is empty
+            if (!originalText) {
+                cleanedTextDiv.textContent = 'Enter text above to see cleaned version...';
+                resultDiv.textContent = 'Enter some text to check if it\'s a palindrome';
+                resultDiv.className = 'result neutral';
+                return;
+            }
+
+            // Clean the text
+            const cleanedText = cleanSentence(originalText);
+            
+            // Show cleaned text
+            if (cleanedText) {
+                cleanedTextDiv.textContent = cleanedText;
+            } else {
+                cleanedTextDiv.textContent = '(no letters or numbers found)';
+            }
+
+            // Check if it's a palindrome
+            if (cleanedText.length === 0) {
+                resultDiv.textContent = 'No valid characters to check';
+                resultDiv.className = 'result neutral';
+            } else if (isPalindrome(cleanedText)) {
+                resultDiv.textContent = 'Yes, it\'s a palindrome!';
+                resultDiv.className = 'result valid';
+            } else {
+                resultDiv.textContent = 'No, it\'s not a palindrome';
+                resultDiv.className = 'result invalid';
+            }
+        }
+
+        // Auto-clear and check on input change
+        sentenceInput.addEventListener('input', checkPalindrome);
+
+        // Initial check in case there's pre-filled text
+        checkPalindrome();
+
+        // Add some example interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus on input for better UX
+            sentenceInput.focus();
+        });
+    </script>
+</body>
+</html>
